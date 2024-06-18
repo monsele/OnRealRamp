@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
@@ -14,8 +15,10 @@ contract EstatePool is ERC1155 {
 	TokenData[] private ListedTokens;
 
 	// @dev mapping of tokenId to amount sold
-	mapping(uint256 tokenId => uint256 amountSold) public availaibleTokenAmount;
-	mapping(uint256 tokenId => TokenData tokenData) tokenMapping;
+	mapping(uint256 => uint256) public availaibleTokenAmount;
+	mapping(uint256 => TokenData) tokenMapping;
+
+	mapping (address => uint) Test;
 	///////////////////
 	/////MODIFIERS/////
 
