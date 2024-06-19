@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 contract EstatePool is ERC1155 {
 	//////////////////
 	/////ERRORS/////
-
+    error EstatePool__TransactionFailed();
 	///////////////////
 	// State Variables
 	///////////////////
@@ -18,14 +18,16 @@ contract EstatePool is ERC1155 {
 	mapping(uint256 => uint256) public availaibleTokenAmount;
 	mapping(uint256 => TokenData) tokenMapping;
 
-	mapping (address => uint) Test;
+	mapping(address => uint) Test;
 	///////////////////
 	/////MODIFIERS/////
 
 	///////////////////
 	// Events
 	///////////////////
-    event TokenListed(address indexed owner, string indexed name,uint256 indexed id);
+	event TokenListed(address indexed owner,string indexed name,uint256 indexed id);
+	event TokenBought(address indexed from,address indexed to,uint256 indexed tokenid);
+
 	constructor(string memory _uri) ERC1155(_uri) {
 		_setURI(_uri);
 	}
@@ -36,18 +38,28 @@ contract EstatePool is ERC1155 {
 		address Owner;
 		uint256 TotalPlots;
 		uint256 AmountToBeSold;
+		EstateType Type;
 	}
-    /*
-     * @param Name: The Name token address of the collateral you're redeeming
-     * @param amountCollateral:Owner is the msg.center
-     * @param totalPlots : The total plots to be created
-     * @notice If you have DSC minted, you will not be able to redeem until you burn your DSC
-     */
+
+	enum EstateType {
+		Land,
+		Houses,
+		Commercial,
+		ApartMent
+	}
+
+	/*
+	 * @param Name: The Name token address of the collateral you're redeeming
+	 * @param amountCollateral:Owner is the msg.center
+	 * @param totalPlots : The total plots to be created
+	 * @notice If you have DSC minted, you will not be able to redeem until you burn your DSC
+	 */
 	function CreateAsset(
 		string memory name,
 		address owner,
 		uint256 totalPlots,
-		uint256 amtToSell
+		uint256 amtToSell,
+		EstateType estateType
 	) external returns (TokenData memory) {
 		uint256 id = GetTokenCounter() + 1;
 		TokenData memory tokenData = TokenData(
@@ -55,23 +67,42 @@ contract EstatePool is ERC1155 {
 			id,
 			owner,
 			totalPlots,
-			amtToSell
+			amtToSell,
+			estateType
 		);
 		_mint(msg.sender, id, totalPlots, "");
-        TokenList.push(tokenData);
-        ListedTokens.push(tokenData);
+		TokenList.push(tokenData);
+		ListedTokens.push(tokenData);
 		availaibleTokenAmount[id] = amtToSell;
 		tokenMapping[id] = tokenData;
-        emit TokenListed(tokenData.Owner, tokenData.Name, tokenData.Id);
+		_setApprovalForAll(msg.sender,address(this),true);
+		emit TokenListed(tokenData.Owner, tokenData.Name, tokenData.Id);
 		return tokenData;
 	}
-    
-     /** Nagte */
-     function GetListedTokens() external view returns(TokenData[] memory) {
-        return ListedTokens;
-     }
+
+	function BuyPlot(uint256 tokenId,uint256 purchaseAmt) external payable returns (uint256 Id, uint256 amountBought) {
+		TokenData memory data = tokenMapping[tokenId];
+		uint256 availiableAmt = availaibleTokenAmount[tokenId];
+		require(purchaseAmt <= availiableAmt,"Purchase amount exceeds the availiable amount");
+		address recipient = data.Owner;
+		(bool success, ) = recipient.call{value: msg.value}("");
+		require(success, "ETH transfer failed");
+        _safeTransferFrom(recipient,msg.sender,tokenId,purchaseAmt,"0x");
+		availaibleTokenAmount[tokenId] = availaibleTokenAmount[tokenId]-purchaseAmt;
+        emit TokenBought(recipient,msg.sender,tokenId);
+		Id = tokenId;
+		amountBought = purchaseAmt;
+	}
+
+	/** Nagte */
+	function GetListedTokens() external view returns (TokenData[] memory) {
+		return ListedTokens;
+	}
 
 	function GetTokenCounter() public view returns (uint256) {
 		return tokencounter;
+	}
+	function GetAvailableTokenAmount(uint256 tokenId) external view  returns (uint256) {
+		return availaibleTokenAmount[tokenId];
 	}
 }
