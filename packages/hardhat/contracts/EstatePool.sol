@@ -17,8 +17,9 @@ contract EstatePool is ERC1155 {
 	// @dev mapping of tokenId to amount sold
 	mapping(uint256 => uint256) public availaibleTokenAmount;
 	mapping(uint256 => TokenData) tokenMapping;
-
-	mapping(address => uint) Test;
+    mapping (address => uint) userTvl;
+	mapping (address => uint) totalYields;
+	mapping (address => TokenData) userToken;
 	///////////////////
 	/////MODIFIERS/////
 
@@ -29,6 +30,10 @@ contract EstatePool is ERC1155 {
 	event TokenBought(address indexed from,address indexed to,uint256 indexed tokenid);
 
 	constructor(string memory _uri) ERC1155(_uri) {
+		//https://myapp.com/{tokenId}
+		{
+			
+		}
 		_setURI(_uri);
 	}
 
@@ -40,7 +45,10 @@ contract EstatePool is ERC1155 {
 		uint256 AmountToBeSold;
 		EstateType Type;
 	}
-
+   struct UserTokenData {
+        TokenData tokenData;
+        uint256 amount;
+    }
 	enum EstateType {
 		Land,
 		Houses,
@@ -89,6 +97,7 @@ contract EstatePool is ERC1155 {
 		require(success, "ETH transfer failed");
         _safeTransferFrom(recipient,msg.sender,tokenId,purchaseAmt,"0x");
 		availaibleTokenAmount[tokenId] = availaibleTokenAmount[tokenId]-purchaseAmt;
+		userTvl[msg.sender] = userTvl[msg.sender]+msg.value;
         emit TokenBought(recipient,msg.sender,tokenId);
 		Id = tokenId;
 		amountBought = purchaseAmt;
