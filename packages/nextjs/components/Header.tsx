@@ -4,6 +4,8 @@ import React, { useCallback, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ArrowDown2, SearchNormal } from "iconsax-react";
+import { useEnsAddress } from "wagmi";
 import { Bars3Icon, BugAntIcon } from "@heroicons/react/24/outline";
 import { FaucetButton, RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
 import { useOutsideClick } from "~~/hooks/scaffold-eth";
@@ -55,7 +57,17 @@ export const HeaderMenuLinks = () => {
 /**
  * Site header
  */
-export const Header = () => {
+
+type Props = {
+  onOpen: () => void;
+};
+
+export const Header = ({ onOpen }: Props) => {
+  const [query, setQuery] = useState<string>("");
+  const address = useEnsAddress();
+  console.log(address);
+
+  const pathname = usePathname();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const burgerMenuRef = useRef<HTMLDivElement>(null);
   useOutsideClick(
@@ -63,8 +75,15 @@ export const Header = () => {
     useCallback(() => setIsDrawerOpen(false), []),
   );
 
+  const handleSearch = (val: React.ChangeEvent<HTMLInputElement>) => {
+    val.preventDefault();
+
+    const { value } = val.target;
+    setQuery(value);
+  };
+
   return (
-    <div className="sticky lg:static top-0 navbar bg-base-100 min-h-0 flex-shrink-0 justify-between z-20 shadow-md shadow-secondary px-0 sm:px-2">
+    <div className="sticky lg:static top-0 navbar min-h-0 flex-shrink-0 justify-between z-20 h-20 shadow-xl shadow-[#E9EEFD] px-0 mt-10 rounded-full bg-[#F8F9FD] sm:px-2 w-[80%] mx-auto">
       <div className="navbar-start w-auto lg:w-1/2">
         <div className="lg:hidden dropdown" ref={burgerMenuRef}>
           <label
@@ -89,21 +108,38 @@ export const Header = () => {
           )}
         </div>
         <Link href="/" passHref className="hidden lg:flex items-center gap-2 ml-4 mr-6 shrink-0">
-          <div className="flex relative w-10 h-10">
-            <Image alt="SE2 logo" className="cursor-pointer" fill src="/logo.svg" />
+          <div className="flex relative w-32 h-10 left-5">
+            <Image alt="Packets logo" className="cursor-pointer" fill src="/logoicon.svg" />
           </div>
-          <div className="flex flex-col">
-            <span className="font-bold leading-tight">Scaffold-ETH</span>
-            <span className="text-xs">Ethereum dev stack</span>
+          <div className="flex flex-col ml-16">
+            <span className="bg-gradient-to-r from-[#3A96AD] to-[#5A82FC] h-10 flex flex-col w-[136px] rounded-full justify-center items-center">
+              <span className="bg-[#F8F9FD] flex flex-row justify-center items-center h-[80%] w-[94%] rounded-full">
+                <p className="bg-clip-text text-[#3A96AD] pr-2">Country</p>
+                <ArrowDown2 size="20" color="#3A96AD" />
+              </span>
+            </span>
           </div>
         </Link>
-        <ul className="hidden lg:flex lg:flex-nowrap menu menu-horizontal px-1 gap-2">
-          <HeaderMenuLinks />
-        </ul>
+        <div className="hidden lg:flex lg:flex-nowrap lg:flex-row justify-between menu menu-horizontal pl-10 gap-2">
+          <div className="flex flex-row items-center bg-slate-200 h-12 rounded-full w-[20vw] pl-5 active:border-blue-400">
+            <span className="-mr-10 ">
+              <SearchNormal size="20" color="gray" />
+            </span>
+            <input
+              className="bg-transparent text-black h-full border-0 pl-3 border-none w-full placeholder:pl-10"
+              value={query}
+              placeholder="Search for properties"
+              onChange={(value: any) => handleSearch(value)}
+            />
+          </div>
+        </div>
       </div>
-      <div className="navbar-end flex-grow mr-4">
+      <div className="navbar-end flex-grow flex-row mr-4 gap-14">
+        <button onClick={onOpen} className="text-black text-lg mr-">
+          List Properties
+        </button>
+
         <RainbowKitCustomConnectButton />
-        <FaucetButton />
       </div>
     </div>
   );

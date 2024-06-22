@@ -14,15 +14,22 @@ contract EstatePool is ERC1155 {
 	TokenData[] private TokenList;
 	TokenData[] private ListedTokens;
 
-	// @dev mapping of tokenId to amount sold
+	/// @dev mapping of tokenId to amount sold
 	mapping(uint256 => uint256) public availaibleTokenAmount;
+	///@dev Mapping for tokenId -> tokendata
 	mapping(uint256 => TokenData) tokenMapping;
+	/// @dev This refers to the user's total value bought
     mapping (address => uint) userTvl;
+	/// @dev This is the user's total yields gained
 	mapping (address => uint) totalYields;
-	mapping (address => TokenData) userToken;
+	/// @dev This ties all the users to their respective tokens
+	 mapping(address => TokenData[]) private userTokens;
+	 /// @dev This mapping is the mapping of tokenId to TokenData
+	mapping(uint256 => TokenData) public tokenDataMapping;
+	
 	///////////////////
 	/////MODIFIERS/////
-
+    
 	///////////////////
 	// Events
 	///////////////////
@@ -31,9 +38,6 @@ contract EstatePool is ERC1155 {
 
 	constructor(string memory _uri) ERC1155(_uri) {
 		//https://myapp.com/{tokenId}
-		{
-			
-		}
 		_setURI(_uri);
 	}
 
@@ -46,8 +50,11 @@ contract EstatePool is ERC1155 {
 		EstateType Type;
 	}
    struct UserTokenData {
-        TokenData tokenData;
-        uint256 amount;
+       // TokenData tokenData;
+		uint256 tokenId;
+		string Name;
+		string Description;
+        uint256 amountOwned;
     }
 	enum EstateType {
 		Land,
@@ -98,6 +105,8 @@ contract EstatePool is ERC1155 {
         _safeTransferFrom(recipient,msg.sender,tokenId,purchaseAmt,"0x");
 		availaibleTokenAmount[tokenId] = availaibleTokenAmount[tokenId]-purchaseAmt;
 		userTvl[msg.sender] = userTvl[msg.sender]+msg.value;
+        //userTokens[msg.sender] = userTokens[msg.sender].push(data);
+		userTokens[msg.sender].push(data);
         emit TokenBought(recipient,msg.sender,tokenId);
 		Id = tokenId;
 		amountBought = purchaseAmt;
@@ -114,4 +123,18 @@ contract EstatePool is ERC1155 {
 	function GetAvailableTokenAmount(uint256 tokenId) external view  returns (uint256) {
 		return availaibleTokenAmount[tokenId];
 	}
+	function GetUserTokensData(address user) external view returns (UserTokenData[] memory) {
+		TokenData[] memory userTokenData = userTokens[user];
+		UserTokenData[] memory userTokenInfo = new UserTokenData[](userTokenData.length); 
+
+		uint256 tokenBalance = 0;
+		for (uint i = 0; i < userTokenData.length; i++) {
+			TokenData memory data = userTokenData[i];
+	        tokenBalance= balanceOf(user,data.Id);
+			userTokenInfo[i] = UserTokenData(data.Id,data.Name,data.Name,tokenBalance);
+		}
+		return userTokenInfo;
+	}
+
+	
 }
