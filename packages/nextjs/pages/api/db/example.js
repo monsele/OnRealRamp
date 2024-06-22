@@ -1,9 +1,7 @@
 //import pool from "../../db";
 import pool from '../../../db.js';
 
-
 // Assuming db.js is in a sibling directory
-
 export default async function handler(req, res) {
   try {
     const connection = await pool.getConnection({
