@@ -111,6 +111,11 @@ contract EstatePool is ERC1155 {
 		Id = tokenId;
 		amountBought = purchaseAmt;
 	}
+	
+	// function AuctionAsset(address owner, uint256 tokenId, uint256 )  returns (bool) {
+	// 	Owner
+	//   	 return true;
+	// }
 
 	/** Nagte */
 	function GetListedTokens() external view returns (TokenData[] memory) {
