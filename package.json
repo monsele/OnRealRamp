@@ -45,5 +45,7 @@
   },
   "dependencies": {
     "@coinbase/onchainkit": "^0.22.0"
+    "@openzeppelin/contracts": "^5.0.2",
+    "mysql2": "^3.10.1"
   }
 }
