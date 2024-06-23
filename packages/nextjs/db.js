@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import mysql from 'mysql2/promise';
 
 
@@ -13,7 +14,7 @@ const pool = mysql.createPool({
     user: 'avnadmin',
     password: 'AVNS_8F-Vme4N6XCRf4WEwef',
     database: dbName,
-    connectTimeout : 1000,
+    connectTimeout : 10000,
     waitForConnections:true,
     port,
    // port,
@@ -27,4 +28,4 @@ const pool = mysql.createPool({
     }
 });
 
-module.exports = pool;
+export default pool
