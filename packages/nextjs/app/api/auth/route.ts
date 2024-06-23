@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "../../../db.js";
 import { serialize } from "cookie";
 import jwt from "jsonwebtoken";
-import { ResultSetHeader, RowDataPacket } from "mysql2";
-
-// use `cookie` for serialization
+import { FieldPacket, ResultSetHeader, RowDataPacket } from "mysql2";
 
 export const POST = async (req: NextRequest) => {
   const { companyName, companyEmail, companyWebsite, cryptoAddress, image } = await req.json();
@@ -13,9 +11,10 @@ export const POST = async (req: NextRequest) => {
   try {
     db = await pool.getConnection();
 
-    const [existing]: [RowDataPacket[]] = await db.query("SELECT cryptoAddress FROM auth WHERE cryptoAddress = ?", [
-      cryptoAddress,
-    ]);
+    const [existing]: [RowDataPacket[], FieldPacket[]] = await db.query(
+      "SELECT cryptoAddress FROM auth WHERE cryptoAddress = ?",
+      [cryptoAddress],
+    );
 
     if (existing.length > 0) {
       db.release();
@@ -26,20 +25,20 @@ export const POST = async (req: NextRequest) => {
       "INSERT INTO auth (companyName, companyEmail, companyWebsite, cryptoAddress, image) VALUES (?, ?, ?, ?, ?)";
     const values = [companyName, companyEmail, companyWebsite, cryptoAddress, image];
 
-    const [result]: [ResultSetHeader] = await db.query(q, values);
+    const [result]: [ResultSetHeader, FieldPacket[]] = await db.query(q, values);
     db.release();
 
     if (result.affectedRows === 0) {
       return NextResponse.json({ err: "Submission of form failed" }, { status: 400 });
     }
 
-    const token = jwt.sign({ id: result.insertId }, process.env.TOKEN, { expiresIn: "30d" });
+    const token = jwt.sign({ id: result.insertId }, process.env.TOKEN as string, { expiresIn: "30d" });
 
     const serializedCookie = serialize("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 30 * 24 * 60 * 60, // 30 days
+      maxAge: 30 * 24 * 60 * 60,
       path: "/",
     });
 
