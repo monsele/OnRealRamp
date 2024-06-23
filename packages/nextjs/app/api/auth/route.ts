@@ -1,15 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "../../../db.js";
+import { serialize } from "cookie";
+import jwt from "jsonwebtoken";
+import { ResultSetHeader, RowDataPacket } from "mysql2";
+
+// use `cookie` for serialization
 
 export const POST = async (req: NextRequest) => {
   const { companyName, companyEmail, companyWebsite, cryptoAddress, image } = await req.json();
 
+  let db;
   try {
-    const db = await pool.getConnection({
-      connectionAcquisitionTimeout: 10000, // Timeout in milliseconds (10 seconds in this case)
-    });
+    db = await pool.getConnection();
 
-    const [existing] = await db.query("SELECT cryptoAddress FROM auth WHERE cryptoAddress = ?", [cryptoAddress]);
+    const [existing]: [RowDataPacket[]] = await db.query("SELECT cryptoAddress FROM auth WHERE cryptoAddress = ?", [
+      cryptoAddress,
+    ]);
 
     if (existing.length > 0) {
       db.release();
@@ -20,16 +26,31 @@ export const POST = async (req: NextRequest) => {
       "INSERT INTO auth (companyName, companyEmail, companyWebsite, cryptoAddress, image) VALUES (?, ?, ?, ?, ?)";
     const values = [companyName, companyEmail, companyWebsite, cryptoAddress, image];
 
-    const [result] = await db.query(q, values);
+    const [result]: [ResultSetHeader] = await db.query(q, values);
     db.release();
 
-    if (!result.affectedRows) {
+    if (result.affectedRows === 0) {
       return NextResponse.json({ err: "Submission of form failed" }, { status: 400 });
     }
 
-    return NextResponse.json({ msg: "Form successfully submitted" }, { status: 201 });
+    const token = jwt.sign({ id: result.insertId }, process.env.TOKEN, { expiresIn: "30d" });
+
+    const serializedCookie = serialize("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 30 * 24 * 60 * 60, // 30 days
+      path: "/",
+    });
+
+    const response = NextResponse.json({ msg: "Form successfully submitted" }, { status: 201 });
+    response.headers.set("Set-Cookie", serializedCookie);
+
+    return response;
   } catch (error) {
     console.error("Database Error: ", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  } finally {
+    if (db) db.release();
   }
 };
