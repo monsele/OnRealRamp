@@ -1,4 +1,5 @@
 import React, { useRef } from "react";
+import { DocumentUpload } from "iconsax-react";
 
 type Props = {
   isOpen: boolean;
@@ -12,12 +13,17 @@ const CompanyRegistrationModal = ({ isOpen, onClose }: Props) => {
 
   return (
     <div ref={modalRef} className="fixed inset-0 bg-white bg-opacity-50 overflow-y-auto z-50 h-full w-full">
-      <div className="relative top-20 mx-auto p-5 h-[50vh] w-[40vw] shadow-lg rounded-xl bg-white">
-        <div className="mt-7 text-center">
-          <h3 className="text-lg text-left w-[80%] leading-6 font-medium text-black">
-            Welcome, just before you start listing, let’s know some more about you
-          </h3>
-          <div className="mt-2 px-3 py-3">
+      <div className="relative top-20 mx-auto p-5 h-[60vh] w-[40vw] shadow-lg rounded-xl bg-white">
+        <div className="mt-2 text-center">
+          <div className="flex flex-row justify-between">
+            <h3 className="text-lg text-left w-[80%] leading-6 font-medium text-black">
+              Welcome, just before you start listing, let’s know some more about you
+            </h3>
+            <button className="pr-5" onClick={onClose}>
+              <p className="text-red-500 underline">Cancel</p>
+            </button>
+          </div>
+          <div className="mt-2 px-3">
             <p className="text-sm text-gray-500">
               To enhance trust on our decentralized platform, we're introducing a one-time registration for property
               listers. This verifies listing authenticity, fostering a secure environment where users confidently engage
@@ -31,7 +37,7 @@ const CompanyRegistrationModal = ({ isOpen, onClose }: Props) => {
 
                 <input
                   type="text"
-                  className="w-[90%] pl-5 text-black placeholder:text-gray-600 border-2 focus:border-blue-500 h-16"
+                  className="w-[90%] pl-5 text-black placeholder:text-gray-600 rounded-lg border-2 focus:border-blue-500 h-12"
                   placeholder="Enter company name"
                 />
               </div>
@@ -40,7 +46,7 @@ const CompanyRegistrationModal = ({ isOpen, onClose }: Props) => {
                 <input
                   type="text"
                   placeholder="Enter company email"
-                  className="w-[90%] pl-5 text-black placeholder:text-gray-600 border-2 focus:border-blue-500 h-16"
+                  className="w-[90%] pl-5 text-black placeholder:text-gray-600 rounded-lg border-2 focus:border-blue-500 h-12"
                 />
               </div>
             </div>
@@ -49,18 +55,23 @@ const CompanyRegistrationModal = ({ isOpen, onClose }: Props) => {
 
               <input
                 type="text"
-                className="w-[100%] pl-5 text-black placeholder:text-gray-600 border-2 focus:border-blue-500 h-16"
+                placeholder="Enter company website"
+                className="w-[100%] pl-5 text-black placeholder:text-gray-600 border-2 rounded-lg focus:border-blue-500 h-12"
               />
             </div>
           </div>
-          <div className="items-center px-4 py-3">
-            <button
-              id="ok-btn"
-              className="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
-              onClick={onClose}
-            >
-              Close
+          <div className="flex flex-col px-4 py-3 justify-center items-center">
+            <p className="text-gray-500 text-center font-medium">Company Government Issued License</p>
+            <button className="h-16 w-[400px] rounded-lg bg-[#E9E9E9] border flex flex-row justify-center items-center">
+              <DocumentUpload size="24" color="#5A82FC" variant="Bold" />
+              <p className="font-semibold text-gray-500 pl-2">Max upload size 5MB </p>
             </button>
+            <div className="flex flex-row">
+              <p className="text-gray-500 text-center font-medium">By continuing you agree to the DestLab</p>
+              <button className="text-gray-900 pl-1 font-medium underline">terms of service</button>
+              <p className="text-gray-500 px-1">and</p>
+              <button className="text-gray-900 pl-1 font-medium underline">privacy policy.</button>
+            </div>
           </div>
         </div>
       </div>
