@@ -2,8 +2,9 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-
-contract EstatePool is ERC1155 {
+import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
+import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Receiver.sol";
+contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 	//////////////////
 	/////ERRORS/////
     error EstatePool__TransactionFailed();
@@ -25,7 +26,7 @@ contract EstatePool is ERC1155 {
 	 /// @dev This mapping is the mapping of tokenId to TokenData
 	mapping(uint256 => TokenData) public tokenDataMapping;
 	/// @dev This mapping is for tracking Auctions to the address that made it
-	mapping (uint256 => AuctionData) auction;
+	mapping (uint256 => AuctionData) public auction;
 	///////////////////
 	/////MODIFIERS/////
     
@@ -35,6 +36,15 @@ contract EstatePool is ERC1155 {
 	event TokenListed(address indexed owner,string indexed name,uint256 indexed id);
 	event TokenBought(address indexed from,address indexed to,uint256 indexed tokenid);
     event AuctionCreated(address indexed creator, uint256 indexed tokenId, uint256 amount);
+	function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC1155, ERC1155Receiver,ERC1155Holder)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
 	constructor(string memory _uri) ERC1155(_uri) {
 		//https://myapp.com/{tokenId}
 		_setURI(_uri);
