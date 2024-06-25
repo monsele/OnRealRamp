@@ -77,16 +77,15 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 		ApartMent
 	}
 
-	/*
-	 * @param Name: The Name token address of the collateral you're redeeming
-	 * @param amountCollateral:Owner is the msg.center
-	 * @param totalPlots : The total plots to be created
-	 * @notice If you have DSC minted, you will not be able to redeem until you burn your DSC
-	 */
+	/// function to list and provide tokens of an asset
+	/// @param id This is the id if the Asset
+	/// @param name The name of asset
+	/// @param totalPlots Total availiable plots
+	/// @param amtToSell Amount willing to see to investors
+	/// @param estateType Estate Type enum
 	function CreateAsset(
 		uint256 id,
 		string memory name,
-		address owner,
 		uint256 totalPlots,
 		uint256 amtToSell,
 		EstateType estateType
@@ -95,7 +94,7 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 		TokenData memory tokenData = TokenData(
 			name,
 			id,
-			owner,
+			msg.sender,
 			totalPlots,
 			amtToSell,
 			estateType
@@ -110,7 +109,15 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 		return tokenData;
 	}
 
-	function BuyPlot(uint256 tokenId,uint256 purchaseAmt) external payable returns (uint256 Id, uint256 amountBought) {
+    /// 
+	/// @param tokenId  this is the Id of the token on the ListedToken array
+	/// @param purchaseAmt this is the amount of uints that the user wants to purchase
+	/// @param expectedPay This is the expected amount the user should send to the smart contract
+	/// @return Id this holds the return value of the token that was bought
+	/// @return amountBought this holds the value of the token that was successfully bought
+	function BuyPlot(uint256 tokenId,uint256 purchaseAmt, uint256 expectedPay) external payable returns (uint256 Id, uint256 amountBought) {
+		///@notice expected pay should be the converted value of the eth price to wei as wei is the value of msg.value
+        require(expectedPay >= msg.value,"The amount sent is not enough for purchase");
 		TokenData memory data = tokenMapping[tokenId];
 		uint256 availiableAmt = availaibleTokenAmount[tokenId];
 		require(purchaseAmt <= availiableAmt,"Purchase amount exceeds the availiable amount");
