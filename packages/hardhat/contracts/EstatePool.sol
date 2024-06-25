@@ -2,16 +2,15 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-
-contract EstatePool is ERC1155 {
+import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
+import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Receiver.sol";
+contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 	//////////////////
 	/////ERRORS/////
     error EstatePool__TransactionFailed();
 	///////////////////
 	// State Variables
 	///////////////////
-	uint256 private tokencounter;
-	TokenData[] private TokenList;
 	TokenData[] private ListedTokens;
 
 	/// @dev mapping of tokenId to amount sold
@@ -26,7 +25,8 @@ contract EstatePool is ERC1155 {
 	 mapping(address => TokenData[]) private userTokens;
 	 /// @dev This mapping is the mapping of tokenId to TokenData
 	mapping(uint256 => TokenData) public tokenDataMapping;
-	
+	/// @dev This mapping is for tracking Auctions to the address that made it
+	mapping (uint256 => AuctionData) public auction;
 	///////////////////
 	/////MODIFIERS/////
     
@@ -35,7 +35,16 @@ contract EstatePool is ERC1155 {
 	///////////////////
 	event TokenListed(address indexed owner,string indexed name,uint256 indexed id);
 	event TokenBought(address indexed from,address indexed to,uint256 indexed tokenid);
-
+    event AuctionCreated(address indexed creator, uint256 indexed tokenId, uint256 amount);
+	function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC1155, ERC1155Receiver,ERC1155Holder)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
 	constructor(string memory _uri) ERC1155(_uri) {
 		//https://myapp.com/{tokenId}
 		_setURI(_uri);
@@ -56,6 +65,11 @@ contract EstatePool is ERC1155 {
 		string Description;
         uint256 amountOwned;
     }
+	struct AuctionData {
+		uint256 TokenId;
+		uint256 AmountToSell;
+		address Owner;
+	}
 	enum EstateType {
 		Land,
 		Houses,
@@ -70,13 +84,14 @@ contract EstatePool is ERC1155 {
 	 * @notice If you have DSC minted, you will not be able to redeem until you burn your DSC
 	 */
 	function CreateAsset(
+		uint256 id,
 		string memory name,
 		address owner,
 		uint256 totalPlots,
 		uint256 amtToSell,
 		EstateType estateType
 	) external returns (TokenData memory) {
-		uint256 id = GetTokenCounter() + 1;
+		
 		TokenData memory tokenData = TokenData(
 			name,
 			id,
@@ -86,7 +101,7 @@ contract EstatePool is ERC1155 {
 			estateType
 		);
 		_mint(msg.sender, id, totalPlots, "");
-		TokenList.push(tokenData);
+		
 		ListedTokens.push(tokenData);
 		availaibleTokenAmount[id] = amtToSell;
 		tokenMapping[id] = tokenData;
@@ -111,14 +126,28 @@ contract EstatePool is ERC1155 {
 		Id = tokenId;
 		amountBought = purchaseAmt;
 	}
-
-	/** Nagte */
+	
+	function AuctionAsset(uint256 tokenId, uint256 amount,uint256 auctionId )external  returns (bool) 
+	{
+        _safeTransferFrom(msg.sender,address(this), tokenId,amount,"0x");
+		auction[auctionId] = AuctionData(tokenId,amount,msg.sender);
+		emit AuctionCreated(msg.sender,tokenId,amount);
+	  	return true;
+	}
+	function PayBid(uint256 amountToPay,uint256 auctionId) external payable returns (bool) {
+		require(msg.value >= amountToPay,"Invalid Amount");
+		AuctionData memory auctionData = auction[auctionId];
+		uint256 amountToSell = auctionData.AmountToSell;
+		address owner = auctionData.Owner;
+		uint256 tokenId = auctionData.TokenId;
+        (bool success, ) = owner.call{value: msg.value}("");
+		require(success, "Eth transaction fails");
+		//transfer to the tokens to the bidder
+		_safeTransferFrom(address(this),msg.sender,tokenId,amountToSell,"0x");
+		return true;
+	}
 	function GetListedTokens() external view returns (TokenData[] memory) {
 		return ListedTokens;
-	}
-
-	function GetTokenCounter() public view returns (uint256) {
-		return tokencounter;
 	}
 	function GetAvailableTokenAmount(uint256 tokenId) external view  returns (uint256) {
 		return availaibleTokenAmount[tokenId];
@@ -126,7 +155,6 @@ contract EstatePool is ERC1155 {
 	function GetUserTokensData(address user) external view returns (UserTokenData[] memory) {
 		TokenData[] memory userTokenData = userTokens[user];
 		UserTokenData[] memory userTokenInfo = new UserTokenData[](userTokenData.length); 
-
 		uint256 tokenBalance = 0;
 		for (uint i = 0; i < userTokenData.length; i++) {
 			TokenData memory data = userTokenData[i];
@@ -135,6 +163,6 @@ contract EstatePool is ERC1155 {
 		}
 		return userTokenInfo;
 	}
-
+    receive() external payable {}
 	
 }
