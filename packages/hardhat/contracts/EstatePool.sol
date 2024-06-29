@@ -170,6 +170,9 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 		}
 		return userTokenInfo;
 	}
+	// function GetAuctionStatus(uint256 auctionId)  returns (bool) {
+		
+	// }
     receive() external payable {}
 	
 }
