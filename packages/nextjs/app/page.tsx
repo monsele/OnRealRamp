@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -35,23 +34,22 @@ const Home: NextPage = () => {
   };
 
   return (
-    <section className="bg-[#F7FCFF] flex flex-col h-auto">
-      <Header onOpen={openListProperty} />
+    <div className="bg-[#F7FCFF] flex flex-col h-auto">
+      {/* <Header onOpen={openListProperty} /> */}
       <div
-        style={{
-          backgroundImage: "url('/map.png')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundPositionY: 20,
-          width: "100%",
-          height: "100vh",
-        }}
+        // style={{
+        //   backgroundImage: "url('/map.png')",
+        //   backgroundSize: "cover",
+        //   backgroundPosition: "center",
+        //   backgroundPositionY: 20,
+        //   width: "100%",
+        //   height: "100vh",
+        // }}
       >
         <div className="w-[30%] mx-auto mt-5">
           <ul className="flex flex-row flex-grow h-10 items-center justify-between">
             {categories.map((category, i) => (
-              <button
-              key={}
+              <button        
                 onClick={() => setActiveCategory(category.title)}
                 style={
                   activeCategory === category.title
@@ -219,7 +217,7 @@ const Home: NextPage = () => {
         <TopCompanies />
       </div>
       <CompanyRegistrationModal isOpen={listProperty} onClose={closeListProperty} />
-    </section>
+    </div>
   );
 };
 

@@ -2,7 +2,7 @@
 node_modules
 
 # yarn
-.yarn/*
+# .yarn/*
 !.yarn/patches
 !.yarn/plugins
 !.yarn/releases
