@@ -67,7 +67,8 @@ export const PATCH = async (req: NextRequest, { params }: { params: { id: string
       id,
     ];
 
-    const [result]: [OkPacketParams] = await db.query(q, values);
+    // const [result]: [OkPacketParams] = await db.query(q, values);
+    const [result]: any = await db.query(q, values);
 
     db.release();
 

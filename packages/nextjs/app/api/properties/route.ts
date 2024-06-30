@@ -12,13 +12,16 @@ export const POST = async (req: NextRequest) => {
     propertyDescription,
     propertyOwner,
     images,
+    smartContractId
   } = await req.json();
 
   try {
     const db = await pool.getConnection();
-
+   
+    const p = "INSERT INTO tokenMetadata(tokenId, name, description, image, externalUrl) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    
     const q =
-      "INSERT INTO property (propertyTitle, propertyLocation, propertyCategory, annualYield, units, price, propertyDescription, propertyOwner, images) VALUES (?,?,?,?,?,?,?,?,?)";
+      "INSERT INTO property (propertyTitle, propertyLocation, propertyCategory, annualYield, units, price, propertyDescription, propertyOwner, images,smartContractId) VALUES (?,?,?,?,?,?,?,?,?)";
 
     const value = [
       propertyTitle,
@@ -30,6 +33,7 @@ export const POST = async (req: NextRequest) => {
       propertyDescription,
       propertyOwner,
       images,
+      smartContractId
     ];
 
     const [result] = await db.query(q, value);

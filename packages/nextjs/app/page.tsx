@@ -51,7 +51,7 @@ const Home: NextPage = () => {
           <ul className="flex flex-row flex-grow h-10 items-center justify-between">
             {categories.map((category, i) => (
               <button
-              key={}
+              key={i}
                 onClick={() => setActiveCategory(category.title)}
                 style={
                   activeCategory === category.title
