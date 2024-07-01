@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     EstatePool: {
-      address: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+      address: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
       abi: [
         {
           inputs: [
@@ -259,6 +259,11 @@ const deployedContracts = {
               name: "purchaseAmt",
               type: "uint256",
             },
+            {
+              internalType: "uint256",
+              name: "expectedPay",
+              type: "uint256",
+            },
           ],
           name: "BuyPlot",
           outputs: [
@@ -287,11 +292,6 @@ const deployedContracts = {
               internalType: "string",
               name: "name",
               type: "string",
-            },
-            {
-              internalType: "address",
-              name: "owner",
-              type: "address",
             },
             {
               internalType: "uint256",
@@ -489,6 +489,35 @@ const deployedContracts = {
               type: "uint256",
             },
           ],
+          name: "auction",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "TokenId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "AmountToSell",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "Owner",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
           name: "availaibleTokenAmount",
           outputs: [
             {
@@ -570,6 +599,84 @@ const deployedContracts = {
             },
           ],
           stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+            {
+              internalType: "uint256[]",
+              name: "",
+              type: "uint256[]",
+            },
+            {
+              internalType: "uint256[]",
+              name: "",
+              type: "uint256[]",
+            },
+            {
+              internalType: "bytes",
+              name: "",
+              type: "bytes",
+            },
+          ],
+          name: "onERC1155BatchReceived",
+          outputs: [
+            {
+              internalType: "bytes4",
+              name: "",
+              type: "bytes4",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+            {
+              internalType: "bytes",
+              name: "",
+              type: "bytes",
+            },
+          ],
+          name: "onERC1155Received",
+          outputs: [
+            {
+              internalType: "bytes4",
+              name: "",
+              type: "bytes4",
+            },
+          ],
+          stateMutability: "nonpayable",
           type: "function",
         },
         {
@@ -751,8 +858,13 @@ const deployedContracts = {
           "@openzeppelin/contracts/token/ERC1155/ERC1155.sol",
         safeTransferFrom: "@openzeppelin/contracts/token/ERC1155/ERC1155.sol",
         setApprovalForAll: "@openzeppelin/contracts/token/ERC1155/ERC1155.sol",
-        supportsInterface: "@openzeppelin/contracts/token/ERC1155/ERC1155.sol",
+        supportsInterface:
+          "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Receiver.sol",
         uri: "@openzeppelin/contracts/token/ERC1155/ERC1155.sol",
+        onERC1155BatchReceived:
+          "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Receiver.sol",
+        onERC1155Received:
+          "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Receiver.sol",
       },
     },
   },

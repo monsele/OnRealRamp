@@ -3,10 +3,12 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useMutation } from "@tanstack/react-query";
 import { SecuritySafe } from "iconsax-react";
 import type { NextPage } from "next";
 import { useAccount } from "wagmi";
 import { BugAntIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { createCompany } from "~~/api/create";
 import { Header } from "~~/components/Header";
 import CompanyRegistrationModal from "~~/components/home/CompanyRegistration.";
 import PropertyCard from "~~/components/home/PropertyCard";
@@ -26,6 +28,11 @@ const Home: NextPage = () => {
   const [activeCategory, setActiveCategory] = useState("Lands");
   const [listProperty, setListProperty] = useState(false);
 
+  const { mutate } = useMutation<any>({
+    queryFn: createCompany,
+    onSuccess: () => {},
+  });
+
   const closeListProperty = () => {
     setListProperty(false);
   };
@@ -35,7 +42,7 @@ const Home: NextPage = () => {
   };
 
   return (
-    <section className="bg-[#F7FCFF] flex flex-col h-auto">
+    <div className="bg-[#F7FCFF] flex flex-col h-auto">
       <Header onOpen={openListProperty} />
       <div
         style={{
@@ -51,7 +58,7 @@ const Home: NextPage = () => {
           <ul className="flex flex-row flex-grow h-10 items-center justify-between">
             {categories.map((category, i) => (
               <button
-              key={}
+                key={i}
                 onClick={() => setActiveCategory(category.title)}
                 style={
                   activeCategory === category.title
@@ -219,7 +226,7 @@ const Home: NextPage = () => {
         <TopCompanies />
       </div>
       <CompanyRegistrationModal isOpen={listProperty} onClose={closeListProperty} />
-    </section>
+    </div>
   );
 };
 

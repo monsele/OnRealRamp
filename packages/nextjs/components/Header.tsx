@@ -59,7 +59,7 @@ export const HeaderMenuLinks = () => {
  */
 
 type Props = {
-  onOpen: () => void;
+  onOpen?: () => void;
 };
 
 export const Header = ({ onOpen }: Props) => {
