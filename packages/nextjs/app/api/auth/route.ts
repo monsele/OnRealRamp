@@ -15,26 +15,21 @@ export const POST = async (req: NextRequest) => {
       "SELECT cryptoAddress FROM auth WHERE cryptoAddress = ?",
       [cryptoAddress],
     );
-console.log("Saelect")
     if (existing.length > 0) {
       db.release();
       return NextResponse.json({ err: "Crypto Address already exists" }, { status: 400 });
     }
-   console.log("existing");
    
     const q =
       "INSERT INTO auth (companyName, companyEmail, companyWebsite, cryptoAddress, image) VALUES (?, ?, ?, ?, ?)";
     const values = [companyName, companyEmail, companyWebsite, cryptoAddress, image];
 
     const [result]: [ResultSetHeader, FieldPacket[]] = await db.query(q, values);
-    console.log("Here3")
     db.release();
   console.log("Here4")
     if (result.affectedRows === 0) {
-       console.log("Here5")
       return NextResponse.json({ err: "Submission of form failed" }, { status: 400 });
     }
-  console.log("Here6")
   //   const token = jwt.sign({ id: result.insertId }, process.env.TOKEN as string, { expiresIn: "30d" });
   // console.log("Here7")
   //   const serializedCookie = serialize("token", token, {
