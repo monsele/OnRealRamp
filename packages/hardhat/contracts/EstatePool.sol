@@ -13,7 +13,8 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 	// State Variables
 	///////////////////
 	TokenData[] private ListedTokens;
-
+	uint256 private tokenCounter;
+	uint256 private auctionCounter;
 	/// @dev mapping of tokenId to amount sold
 	mapping(uint256 => uint256) public availaibleTokenAmount;
 	///@dev Mapping for tokenId -> tokendata
@@ -26,7 +27,7 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 	mapping(address => TokenData[]) private userTokens;
 	/// @dev This mapping is the mapping of tokenId to TokenData
 	mapping(uint256 => TokenData) public tokenDataMapping;
-	/// @dev This mapping is for tracking Auctions to the address that made it
+	/// @dev This mapping is for tracking Auctions
 	mapping(uint256 => AuctionData) public auction;
 	///////////////////
 	/////MODIFIERS/////
@@ -65,6 +66,8 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 	constructor(string memory _uri) ERC1155(_uri) {
 		//https://myapp.com/{tokenId}
 		_setURI(_uri);
+		tokenCounter = 0;
+		auctionCounter = 0;
 	}
 
 	struct TokenData {
@@ -86,6 +89,8 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 		uint256 TokenId;
 		uint256 AmountToSell;
 		address Owner;
+		uint256 auctionId;
+		bool completed;
 	}
 	enum EstateType {
 		Land,
@@ -95,31 +100,29 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 	}
 
 	/// function to list and provide tokens of an asset
-	/// @param id This is the id if the Asset
 	/// @param name The name of asset
 	/// @param totalPlots Total availiable plots
 	/// @param amtToSell Amount willing to see to investors
 	/// @param estateType Estate Type enum
 	function CreateAsset(
-		uint256 id,
 		string memory name,
 		uint256 totalPlots,
 		uint256 amtToSell,
 		EstateType estateType
 	) external returns (TokenData memory) {
+		tokenCounter = GetTokenCounter() + 1;
 		TokenData memory tokenData = TokenData(
 			name,
-			id,
+			tokenCounter,
 			msg.sender,
 			totalPlots,
 			amtToSell,
 			estateType
 		);
-		_mint(msg.sender, id, totalPlots, "");
-
+		_mint(msg.sender, tokenCounter, totalPlots, "");
 		ListedTokens.push(tokenData);
-		availaibleTokenAmount[id] = amtToSell;
-		tokenMapping[id] = tokenData;
+		availaibleTokenAmount[tokenCounter] = amtToSell;
+		tokenMapping[tokenCounter] = tokenData;
 		_setApprovalForAll(msg.sender, address(this), true);
 		emit TokenListed(tokenData.Owner, tokenData.Name, tokenData.Id);
 		return tokenData;
@@ -141,7 +144,9 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 			expectedPay >= msg.value,
 			"The amount sent is not enough for purchase"
 		);
+
 		TokenData memory data = tokenMapping[tokenId];
+		require(msg.sender != data.Owner, "Owner Cannot buy listed property");
 		uint256 availiableAmt = availaibleTokenAmount[tokenId];
 		require(
 			purchaseAmt <= availiableAmt,
@@ -164,13 +169,19 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 
 	function AuctionAsset(
 		uint256 tokenId,
-		uint256 amount,
-		uint256 auctionId
-	) external returns (bool) {
+		uint256 amount
+	) external returns (bool, uint256) {
+		uint256 auctionId = GetAuctionCounter() + 1;
 		_safeTransferFrom(msg.sender, address(this), tokenId, amount, "0x");
-		auction[auctionId] = AuctionData(tokenId, amount, msg.sender);
+		auction[auctionId] = AuctionData(
+			tokenId,
+			amount,
+			msg.sender,
+			auctionId,
+			false
+		);
 		emit AuctionCreated(msg.sender, tokenId, amount);
-		return true;
+		return (true, auctionId);
 	}
 
 	function PayBid(
@@ -179,6 +190,7 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 	) external payable returns (bool) {
 		require(msg.value >= amountToPay, "Invalid Amount");
 		AuctionData memory auctionData = auction[auctionId];
+		require(auctionData.completed == false, "Auction is already completed");
 		uint256 amountToSell = auctionData.AmountToSell;
 		address owner = auctionData.Owner;
 		uint256 tokenId = auctionData.TokenId;
@@ -192,6 +204,8 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 			amountToSell,
 			"0x"
 		);
+		auctionData.completed = true;
+		auction[auctionId] = auctionData;
 		return true;
 	}
 
@@ -229,5 +243,13 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 	// function GetAuctionStatus(uint256 auctionId)  returns (bool) {
 
 	// }
+	function GetTokenCounter() public view returns (uint256) {
+		return tokenCounter;
+	}
+
+	function GetAuctionCounter() public view returns (uint256) {
+		return auctionCounter;
+	}
+
 	receive() external payable {}
 }
