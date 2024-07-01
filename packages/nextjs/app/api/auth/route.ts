@@ -26,7 +26,6 @@ export const POST = async (req: NextRequest) => {
 
     const [result]: [ResultSetHeader, FieldPacket[]] = await db.query(q, values);
     db.release();
-  console.log("Here4")
     if (result.affectedRows === 0) {
       return NextResponse.json({ err: "Submission of form failed" }, { status: 400 });
     }
