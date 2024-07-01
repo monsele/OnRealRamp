@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useMutation } from "@tanstack/react-query";
 import { SecuritySafe } from "iconsax-react";
 import type { NextPage } from "next";
+import toast from "react-hot-toast";
 import { useAccount } from "wagmi";
 import { BugAntIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { createCompany } from "~~/api/create";
@@ -29,8 +30,14 @@ const Home: NextPage = () => {
   const [listProperty, setListProperty] = useState(false);
 
   const { mutate } = useMutation<any>({
-    queryFn: createCompany,
-    onSuccess: () => {},
+    mutationFn: createCompany,
+    mutationKey: ["company"],
+    onSuccess: () => {
+      toast.success("Successfull");
+    },
+    onError: error => {
+      toast.error(error.message);
+    },
   });
 
   const closeListProperty = () => {
@@ -58,11 +65,7 @@ const Home: NextPage = () => {
           <ul className="flex flex-row flex-grow h-10 items-center justify-between">
             {categories.map((category, i) => (
               <button
-<<<<<<< HEAD
                 key={i}
-=======
-              key={i}
->>>>>>> origin/main
                 onClick={() => setActiveCategory(category.title)}
                 style={
                   activeCategory === category.title
