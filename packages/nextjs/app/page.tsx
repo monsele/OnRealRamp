@@ -29,17 +29,6 @@ const Home: NextPage = () => {
   const [activeCategory, setActiveCategory] = useState("Lands");
   const [listProperty, setListProperty] = useState(false);
 
-  const { mutate } = useMutation<any>({
-    mutationFn: createCompany,
-    mutationKey: ["company"],
-    onSuccess: () => {
-      toast.success("Successfull");
-    },
-    onError: error => {
-      toast.error(error.message);
-    },
-  });
-
   const closeListProperty = () => {
     setListProperty(false);
   };

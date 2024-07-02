@@ -47,15 +47,15 @@ export const ScaffoldEthAppWithProviders = ({ children }: { children: React.Reac
   }, []);
 
   return (
-    <OnchainKitProvider chain={sepolia}>
-      <WagmiProvider config={wagmiConfig}>
-        <QueryClientProvider client={queryClient}>
-          <ProgressBar />
-          <RainbowKitProvider avatar={BlockieAvatar}>
-            <ScaffoldEthApp>{children}</ScaffoldEthApp>
-          </RainbowKitProvider>
-        </QueryClientProvider>
-      </WagmiProvider>
-    </OnchainKitProvider>
+    // <OnchainKitProvider chain={sepolia}>
+    <WagmiProvider config={wagmiConfig}>
+      <QueryClientProvider client={queryClient}>
+        <ProgressBar />
+        <RainbowKitProvider avatar={BlockieAvatar}>
+          <ScaffoldEthApp>{children}</ScaffoldEthApp>
+        </RainbowKitProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
+    // </OnchainKitProvider>
   );
 };
