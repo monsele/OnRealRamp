@@ -5,9 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowDown2, SearchNormal } from "iconsax-react";
-import { useEnsAddress } from "wagmi";
+import { useAccount } from "wagmi";
+import { useScaffoldReadContract } from "~~/hooks/scaffold-eth"; // Assuming you're using the React library
+
 import { Bars3Icon, BugAntIcon } from "@heroicons/react/24/outline";
-import { FaucetButton, RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
+import { RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
+import { ethers } from 'ethers'
 import { useOutsideClick } from "~~/hooks/scaffold-eth";
 
 type HeaderMenuLink = {
@@ -64,8 +67,15 @@ type Props = {
 
 export const Header = ({ onOpen }: Props) => {
   const [query, setQuery] = useState<string>("");
-  const address = useEnsAddress();
+  const { address } = useAccount()
+  const { data: totalCounter } = useScaffoldReadContract({
+  contractName: "EstatePool",
+  functionName: "availaibleTokenAmount",
+  args: [BigInt(1)],
+});
+  //const address = useEnsAddress();
   console.log(address);
+  console.log(totalCounter);
 
   const pathname = usePathname();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -74,7 +84,7 @@ export const Header = ({ onOpen }: Props) => {
     burgerMenuRef,
     useCallback(() => setIsDrawerOpen(false), []),
   );
-
+   
   const handleSearch = (val: React.ChangeEvent<HTMLInputElement>) => {
     val.preventDefault();
 

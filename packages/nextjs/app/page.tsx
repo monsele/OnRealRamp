@@ -13,7 +13,7 @@ import PropertyCard from "~~/components/home/PropertyCard";
 import TopCompanies from "~~/components/home/TopCompanies";
 import Testimonial from "~~/components/home/testimonial";
 import { Address } from "~~/components/scaffold-eth";
-
+import FrameComponent from "~~/components/locofy/frame-component"
 const categories = [
   { title: "Lands", id: 2323 },
   { title: "Houses", id: 2223 },
@@ -36,7 +36,8 @@ const Home: NextPage = () => {
 
   return (
     <section className="bg-[#F7FCFF] flex flex-col h-auto">
-      <Header onOpen={openListProperty} />
+      {/* <Header onOpen={openListProperty} /> */}
+      <FrameComponent/>
       <div
         style={{
           backgroundImage: "url('/map.png')",

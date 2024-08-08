@@ -14,6 +14,7 @@ const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
     <html suppressHydrationWarning>
       <body className="bg-[#F7FCFF]">
         <ScaffoldEthAppWithProviders>{children}</ScaffoldEthAppWithProviders>
+        <div>Testttt</div>
       </body>
     </html>
   );
