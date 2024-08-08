@@ -1,4 +1,4 @@
-  // SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
@@ -13,8 +13,9 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 	// State Variables
 	///////////////////
 	TokenData[] private ListedTokens;
+	AuctionData[] private auctions;
 	uint256 private tokenCounter;
-    uint256 private auctionCounter;
+	uint256 private auctionCounter;
 	/// @dev mapping of tokenId to amount sold
 	mapping(uint256 => uint256) public availaibleTokenAmount;
 	///@dev Mapping for tokenId -> tokendata
@@ -25,10 +26,9 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 	mapping(address => uint) totalYields;
 	/// @dev This ties all the users to their respective tokens
 	mapping(address => TokenData[]) private userTokens;
-	/// @dev This mapping is the mapping of tokenId to TokenData
-	mapping(uint256 => TokenData) public tokenDataMapping;
-	/// @dev This mapping is for tracking Auctions 
+	/// @dev This mapping is for tracking Auctions
 	mapping(uint256 => AuctionData) public auction;
+
 	///////////////////
 	/////MODIFIERS/////
 
@@ -46,11 +46,20 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 		uint256 indexed tokenid
 	);
 	event AuctionCreated(
+		uint256 indexed auctionId,
 		address indexed creator,
 		uint256 indexed tokenId,
 		uint256 amount
 	);
 
+	event TokenDelisted(uint256 indexed tokenId);
+
+	event AuctionPaid(
+		address indexed payer,
+		address indexed owner,
+		uint256 indexed auctionId,
+		uint256 amount
+	);
 	function supportsInterface(
 		bytes4 interfaceId
 	)
@@ -67,7 +76,7 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 		//https://myapp.com/{tokenId}
 		_setURI(_uri);
 		tokenCounter = 0;
-        auctionCounter = 0;
+		auctionCounter = 0;
 	}
 
 	struct TokenData {
@@ -77,6 +86,7 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 		uint256 TotalPlots;
 		uint256 AmountToBeSold;
 		EstateType Type;
+		bool Active;
 	}
 	struct UserTokenData {
 		// TokenData tokenData;
@@ -89,8 +99,8 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 		uint256 TokenId;
 		uint256 AmountToSell;
 		address Owner;
-        uint256 auctionId;
-        bool completed;
+		uint256 auctionId;
+		bool completed;
 	}
 	enum EstateType {
 		Land,
@@ -117,7 +127,8 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 			msg.sender,
 			totalPlots,
 			amtToSell,
-			estateType
+			estateType,
+			false
 		);
 		_mint(msg.sender, tokenCounter, totalPlots, "");
 		ListedTokens.push(tokenData);
@@ -144,9 +155,9 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 			expectedPay >= msg.value,
 			"The amount sent is not enough for purchase"
 		);
-        
+
 		TokenData memory data = tokenMapping[tokenId];
-        require(msg.sender != data.Owner, "Owner Cannot buy listed property");
+		require(msg.sender != data.Owner, "Owner Cannot buy listed property");
 		uint256 availiableAmt = availaibleTokenAmount[tokenId];
 		require(
 			purchaseAmt <= availiableAmt,
@@ -160,8 +171,7 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 			availaibleTokenAmount[tokenId] -
 			purchaseAmt;
 		userTvl[msg.sender] = userTvl[msg.sender] + msg.value;
-		//userTokens[msg.sender] = userTokens[msg.sender].push(data);
-		userTokens[msg.sender].push(data);
+		AddTokenToUser(msg.sender, tokenId);
 		emit TokenBought(recipient, msg.sender, tokenId);
 		Id = tokenId;
 		amountBought = purchaseAmt;
@@ -170,12 +180,22 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 	function AuctionAsset(
 		uint256 tokenId,
 		uint256 amount
-	) external returns (bool,uint256) {
-        uint256 auctionId = GetAuctionCounter()+1;
+	) external returns (bool, uint256) {
+		uint256 auctionId = GetAuctionCounter() + 1;
 		_safeTransferFrom(msg.sender, address(this), tokenId, amount, "0x");
-		auction[auctionId] = AuctionData(tokenId, amount, msg.sender,auctionId,false);
-		emit AuctionCreated(msg.sender, tokenId, amount);
-		return (true,auctionId);
+
+		auction[auctionId] = AuctionData(
+			tokenId,
+			amount,
+			msg.sender,
+			auctionId,
+			false
+		);
+		auctions.push(
+			AuctionData(tokenId, amount, msg.sender, auctionId, false)
+		);
+		emit AuctionCreated(auctionId, msg.sender, tokenId, amount);
+		return (true, auctionId);
 	}
 
 	function PayBid(
@@ -184,7 +204,7 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 	) external payable returns (bool) {
 		require(msg.value >= amountToPay, "Invalid Amount");
 		AuctionData memory auctionData = auction[auctionId];
-        require(auctionData.completed == false, "Auction is already completed");
+		require(auctionData.completed == false, "Auction is already completed");
 		uint256 amountToSell = auctionData.AmountToSell;
 		address owner = auctionData.Owner;
 		uint256 tokenId = auctionData.TokenId;
@@ -198,8 +218,11 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 			amountToSell,
 			"0x"
 		);
-        auctionData.completed=true;
-        auction[auctionId] = auctionData;
+		//Auction data should be removed from the mapping and from the auction list
+		//auction[auctionId] = auctionData;
+		auction[auctionId].completed = true;
+		AddTokenToUser(msg.sender, tokenId);
+		emit AuctionPaid(msg.sender, owner, auctionId, amountToPay);
 		return true;
 	}
 
@@ -217,6 +240,7 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 		address user
 	) external view returns (UserTokenData[] memory) {
 		TokenData[] memory userTokenData = userTokens[user];
+		//TokenData[] memory userTokenData2 = userTokensss[user];
 		UserTokenData[] memory userTokenInfo = new UserTokenData[](
 			userTokenData.length
 		);
@@ -237,11 +261,29 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 	// function GetAuctionStatus(uint256 auctionId)  returns (bool) {
 
 	// }
+	function AddTokenToUser(
+		address user,
+		uint256 tokenId
+	) public returns (bool) {
+		TokenData[] memory tokens = userTokens[user];
+		for (uint256 i = 0; i < tokens.length; i++) {
+			if (tokens[i].Id == tokenId) {
+				return true;
+			}
+		}
+		userTokens[user].push(tokenMapping[tokenId]);
+		return true;
+	}
 	function GetTokenCounter() public view returns (uint256) {
 		return tokenCounter;
 	}
-    function GetAuctionCounter() public view returns (uint256) {
+
+	function GetAuctionCounter() public view returns (uint256) {
 		return auctionCounter;
+	}
+
+	function GetAuctions() external view returns (AuctionData[] memory) {
+		return auctions;
 	}
 
 	receive() external payable {}
