@@ -2556,6 +2556,7 @@ __metadata:
     "@uniswap/v2-sdk": ^3.0.1
     abitype: ^1.0.2
     autoprefixer: ^10.4.12
+    axios: ^1.7.2
     bcrypt: ^5.1.1
     bcryptjs: ^2.4.3
     blo: ^1.0.1
@@ -4942,7 +4943,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^1.5.1":
+"axios@npm:^1.5.1, axios@npm:^1.7.2":
   version: 1.7.2
   resolution: "axios@npm:1.7.2"
   dependencies:

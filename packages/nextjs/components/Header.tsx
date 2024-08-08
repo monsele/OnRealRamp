@@ -62,7 +62,7 @@ export const HeaderMenuLinks = () => {
  */
 
 type Props = {
-  onOpen: () => void;
+  onOpen?: () => void;
 };
 
 export const Header = ({ onOpen }: Props) => {
@@ -148,7 +148,12 @@ export const Header = ({ onOpen }: Props) => {
         <button onClick={onOpen} className="text-black text-lg mr-">
           List Properties
         </button>
-
+        {isConnected && (
+          <Link href={"/property-manager"}>
+            {" "}
+            <p className="text-black">Profolio</p>{" "}
+          </Link>
+        )}
         <RainbowKitCustomConnectButton />
       </div>
     </div>

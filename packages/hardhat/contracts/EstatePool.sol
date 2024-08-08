@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
@@ -15,6 +16,7 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 	TokenData[] private ListedTokens;
 	AuctionData[] private auctions;
 	uint256 private tokenCounter;
+	uint256 private auctionCounter;
 	uint256 private auctionCounter;
 	/// @dev mapping of tokenId to amount sold
 	mapping(uint256 => uint256) public availaibleTokenAmount;
@@ -77,6 +79,7 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 		_setURI(_uri);
 		tokenCounter = 0;
 		auctionCounter = 0;
+		auctionCounter = 0;
 	}
 
 	struct TokenData {
@@ -99,6 +102,8 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 		uint256 TokenId;
 		uint256 AmountToSell;
 		address Owner;
+		uint256 auctionId;
+		bool completed;
 		uint256 auctionId;
 		bool completed;
 	}
@@ -156,7 +161,9 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 			"The amount sent is not enough for purchase"
 		);
 
+
 		TokenData memory data = tokenMapping[tokenId];
+		require(msg.sender != data.Owner, "Owner Cannot buy listed property");
 		require(msg.sender != data.Owner, "Owner Cannot buy listed property");
 		uint256 availiableAmt = availaibleTokenAmount[tokenId];
 		require(
@@ -182,6 +189,8 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 		uint256 amount
 	) external returns (bool, uint256) {
 		uint256 auctionId = GetAuctionCounter() + 1;
+	) external returns (bool, uint256) {
+		uint256 auctionId = GetAuctionCounter() + 1;
 		_safeTransferFrom(msg.sender, address(this), tokenId, amount, "0x");
 
 		auction[auctionId] = AuctionData(
@@ -204,6 +213,7 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 	) external payable returns (bool) {
 		require(msg.value >= amountToPay, "Invalid Amount");
 		AuctionData memory auctionData = auction[auctionId];
+		require(auctionData.completed == false, "Auction is already completed");
 		require(auctionData.completed == false, "Auction is already completed");
 		uint256 amountToSell = auctionData.AmountToSell;
 		address owner = auctionData.Owner;
@@ -277,6 +287,8 @@ contract EstatePool is ERC1155, ERC1155Holder, ERC1155Receiver {
 	function GetTokenCounter() public view returns (uint256) {
 		return tokenCounter;
 	}
+
+	function GetAuctionCounter() public view returns (uint256) {
 
 	function GetAuctionCounter() public view returns (uint256) {
 		return auctionCounter;
